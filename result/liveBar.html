@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body style="height: 100%; margin: 0">
+        <div id="container" style="height: 80%;width: 60%;"></div>
+        <script type="text/javascript" src="https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js"></script>
+        <script type="text/javascript" src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+        <script type="text/javascript">
+var dom = document.getElementById("container");
+var myChart = echarts.init(dom);
+var option;
+
+const updateFrequency = 1000;
+const dimension = 0;
+const countryColors = {
+    // genres colors
+    'Game-Show': '#00008b',
+    'Reality-TV': '#f00',
+    Musical: '#FF8247',
+    Western: '#002a8f',
+    War: '#003580',
+    Sport: '#ed2939',
+    Short: '#000',
+    Documentary: '#003897',
+    Music: '#f93',
+    History: '#bc002d',
+    'Sci-Fi': '#024fa2',
+    'Film-Noir': '#000',
+    Mystery: '#00247d',
+    Romance: '#ef2b2d',
+    Horror: '#dc143c',
+    Fantasy: '#d52b1e',
+    Family: '#e30a17',
+    Thriller: '#00247d',
+    Biography: '#b22234',
+    Animation: '#4682B4',
+    Crime: '#B0C4DE',
+    Action: '#B0E0E6',
+    Adventure: '#F4A460',
+    Comedy: '#E9967A',
+    Drama: '#FF7F50'
+};
+
+$.get('./liveBar.json', function (genres_data) {
+
+    const genres = genres_data["genres"];
+    const data = genres_data["data"];
+    const years = genres_data["years"];
+    years.splice(years.length-2)
+    console.log(genres)
+    let startIndex = 0;
+    let startYear = years[startIndex];
+    option = {
+        grid: {
+            top: 10,
+            bottom: 10,
+            left: 150,
+            right: 80
+        },
+        xAxis: {
+            max: 'dataMax',
+            axisLabel: {
+                formatter: function (n) {
+                    return Math.round(n) + '';
+                }
+            }
+        },
+        dataset: {
+            source: data.filter(function (d) {
+                return d[2] === startYear;
+            })
+        },
+        yAxis: {
+            type: 'category',
+            inverse: true,
+            max: 25,
+            axisLabel: {
+                show: true,
+                fontSize: 15,
+                formatter: function (value) {
+                    return value;
+                },
+                rich: {
+                    flag: {
+                        fontSize: 25,
+                        padding: 5
+                    }
+                }
+            },
+            animationDuration: 300,
+            animationDurationUpdate: 300
+        },
+        series: [
+            {
+                realtimeSort: true,
+                seriesLayoutBy: 'column',
+                type: 'bar',
+                itemStyle: {
+                color: function (param) {
+                    return countryColors[param.value[1]] || '#5470c6';
+                }
+                },
+                encode: {
+                    x: dimension,
+                    y: 3
+                },
+                label: {
+                    show: true,
+                    precision: 1,
+                    position: 'right',
+                    valueAnimation: true,
+                    fontFamily: 'monospace'
+                }
+            }
+        ],
+        // Disable init animation.
+        animationDuration: 0,
+        animationDurationUpdate: updateFrequency,
+        animationEasing: 'linear',
+        animationEasingUpdate: 'linear',
+        graphic: {
+            elements: [
+                {
+                    type: 'text',
+                    right: 160,
+                    bottom: 60,
+                    style: {
+                        text: startYear,
+                        font: 'bolder 80px monospace',
+                        fill: 'rgba(100, 100, 100, 0.25)'
+                    },
+                    z: 100
+                }
+            ]
+        }
+    };
+    // console.log(option);
+    myChart.setOption(option);
+    for (let i = startIndex; i < years.length - 1; ++i) {
+        (function (i) {
+        setTimeout(function () {
+            updateYear(years[i + 1]);
+        }, (i - startIndex) * updateFrequency);
+        })(i);
+    }
+    function updateYear(year) {
+        let source = data.filter(function (d) {
+            return d[2] === year;
+        });
+        option.series[0].data = source;
+        option.graphic.elements[0].style.text = year;
+        myChart.setOption(option);
+    }  
+});
+
+if (option && typeof option === 'object') {
+    myChart.setOption(option);
+}
+        </script>
+    </body>
+</html>
